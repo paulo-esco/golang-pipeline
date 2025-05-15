@@ -4,14 +4,15 @@ import (
 	"sync"
 )
 
-func ExecutePipeline(jobs... job) {
-	channels := make([]chan interface{}, len(jobs))
+func ExecutePipeline(jobs ...job) {
+	var channels []chan any
 
-	in := make(chan interface{})
-	out := channels[len(channels)-1]
+	in := make(chan any)
+	// out := channels[len(channels)-1]
 
 	wg := new(sync.WaitGroup)
 	for i, job := range jobs {
+		channels = append(channels, make(chan any))
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -23,6 +24,7 @@ func ExecutePipeline(jobs... job) {
 			jobOut := channels[i]
 
 			job(jobIn, jobOut)
+			close(jobOut)
 		}()
 	}
 	wg.Wait()
